@@ -2,7 +2,7 @@
 (function () {
   'use strict';
 
-  var VERSION = '3.0.0';
+  var VERSION = '3.1.0';
   var $ = function (s, r) { return (r || document).querySelector(s); };
   var esc = function (s) {
     return String(s == null ? '' : s).replace(/[&<>"']/g, function (c) {
@@ -154,11 +154,47 @@
 
   var RECITERS = [
     ['mishary-alafasy/r1', 'مشاري العفاسي', 'Mishary Alafasy'],
+    ['yasser-dosari/r1', 'ياسر الدوسري', 'Yasser Al-Dosari'],
+    ['muhammad-luhaidan/r1', 'محمد اللحيدان', 'Mohammed Al-Lohaidan'],
+    ['maher-muaiqly/r1', 'ماهر المعيقلي', 'Maher Al-Muaiqly'],
+    ['abdulrahman-sudais/r1', 'عبدالرحمن السديس', 'Abdulrahman As-Sudais'],
+    ['saud-shuraim/r1', 'سعود الشريم', 'Saud Al-Shuraim'],
+    ['saad-ghamdi/r1', 'سعد الغامدي', 'Saad Al-Ghamdi'],
+    ['ahmad-ajmi/r1', 'أحمد بن علي العجمي', 'Ahmad Al-Ajmy'],
+    ['nasser-qatami/r1', 'ناصر القطامي', 'Nasser Alqatami'],
+    ['khalid-jalil/r1', 'خالد الجليل', 'Khalid Al-Jileel'],
+    ['fares-abbad/r1', 'فارس عباد', 'Fares Abbad'],
+    ['abubakr-shatri/r1', 'أبو بكر الشاطري', 'Abu Bakr Al-Shatri'],
+    ['hani-rifai/r1', 'هاني الرفاعي', 'Hani Arrifai'],
+    ['idrees-abkar/r1', 'إدريس أبكر', 'Idrees Abkr'],
+    ['abdullah-juhani/r1', 'عبدالله عواد الجهني', 'Abdullah Al-Johany'],
+    ['abdullah-basfar/r1', 'عبدالله بصفر', 'Abdullah Basfer'],
+    ['abdullah-matrood/r1', 'عبدالله المطرود', 'Abdullah Al-Mattrod'],
+    ['abdullah-khayyat/r1', 'عبدالله خياط', 'Abdullah Khayyat'],
+    ['abdulmohsen-qasim/r1', 'عبدالمحسن القاسم', 'Abdulmohsen Al-Qasim'],
+    ['abdulbari-thubaiti/r1', 'عبدالبارئ الثبيتي', 'Abdelbari Al-Toubayti'],
+    ['ali-hudhaifi/r1', 'علي بن عبدالرحمن الحذيفي', 'Ali Alhuthaifi'],
+    ['ali-jaber/r1', 'علي جابر', 'Ali Jaber'],
+    ['salah-budair/r1', 'صلاح البدير', 'Salah Albudair'],
+    ['salah-bukhatir/r1', 'صلاح بو خاطر', 'Salah Bukhatir'],
+    ['muhammad-ayyub/r1', 'محمد أيوب', 'Mohammed Ayyub'],
+    ['muhammad-muhaisni/r1', 'محمد المحيسني', 'Mohammed Al-Muhasny'],
+    ['muhammad-jibreel/r1', 'محمد جبريل', 'Mohammed Jibreel'],
+    ['mansour-salimi/r1', 'منصور السالمي', 'Mansour Al-Salemi'],
+    ['raad-kurdi/r1', 'رعد محمد الكردي', 'Raad Al Kurdi'],
+    ['peshawa-kurdi/r1', 'بيشه وا قادر الكردي', 'Peshawa Qadr Al-Kurdi'],
+    ['wadee-yamani/r1', 'وديع اليمني', 'Wadeea Al-Yamani'],
+    ['abdulrahman-oosi/r1', 'عبدالرحمن العوسي', 'Abdulrahman Aloosi'],
+    ['khalifa-tunaiji/r1', 'خليفة الطنيجي', 'Khalifa Altunaiji'],
+    ['nabil-rifai/r1', 'نبيل الرفاعي', 'Nabil Al Rifay'],
+    ['mahmoud-rifai/r1', 'محمود الرفاعي', 'Mahmood Al Rifai'],
+    ['ibrahim-akhdar/r1', 'إبراهيم الأخضر', 'Ibrahim Al-Akdar'],
+    ['ibrahim-dosari/r2', 'إبراهيم الدوسري', 'Ibrahim Aldosari'],
     ['mahmoud-husary/r1', 'محمود خليل الحصري', 'Mahmoud Khalil Al-Husary'],
     ['muhammad-minshawi/r1', 'محمد صديق المنشاوي', 'Muhammad Siddiq Al-Minshawi'],
     ['abdulbasit-abdulsamad/r3', 'عبدالباسط عبدالصمد', 'Abdulbasit Abdulsamad'],
-    ['maher-muaiqly/r1', 'ماهر المعيقلي', 'Maher Al-Muaiqly'],
-    ['abdulrahman-sudais/r1', 'عبدالرحمن السديس', 'Abdulrahman As-Sudais']
+    ['mahmoud-banna/r1', 'محمود علي البنا', 'Mahmoud Ali Albanna'],
+    ['muhammad-tablawi/r1', 'محمد الطبلاوي', 'Mohammad Al-Tablaway']
   ];
   function reciterName() { var r = RECITERS.filter(function (x) { return x[0] === S.reciter; })[0] || RECITERS[0]; return S.lang === 'ar' ? r[1] : r[2]; }
 

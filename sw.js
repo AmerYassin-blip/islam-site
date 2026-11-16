@@ -1,5 +1,5 @@
 /* Offline support. Bump CACHE when files change. */
-var CACHE = 'nur-v3.0.0';
+var CACHE = 'nur-v3.1.0';
 var FILES = ['./', 'index.html', 'styles.css', 'app.js', 'adhan.min.js', 'quran.json', 'adhkar.json', 'meta.json', 'hadith.json', 'hafs.woff2', 'amiri.woff2', 'manifest.webmanifest', 'icon.svg', 'icon-192.png', 'icon-512.png'];
 
 self.addEventListener('install', function (e) {
