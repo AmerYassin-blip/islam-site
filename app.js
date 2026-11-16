@@ -2,7 +2,7 @@
 (function () {
   'use strict';
 
-  var VERSION = '2.0.0';
+  var VERSION = '3.0.0';
   var $ = function (s, r) { return (r || document).querySelector(s); };
   var esc = function (s) {
     return String(s == null ? '' : s).replace(/[&<>"']/g, function (c) {
@@ -30,7 +30,9 @@
     tasbih: store.get('tasbih', { n: 0, target: 33 }),
     reciter: store.get('reciter', 'mishary-alafasy/r1'),
     audio: store.get('audio', null),
-    khatma: store.get('khatma', null)
+    khatma: store.get('khatma', null),
+    track: store.get('track', {}),
+    zakat: store.get('zakat', { basis: 'gold', karat: 21 })
   };
   function save(k, v) { S[k] = v; store.set(k, v); }
 
@@ -66,6 +68,12 @@
       listen: 'استماع إلى السورة', play: 'تشغيل', pause: 'إيقاف مؤقت', stop: 'إيقاف', reciter: 'القارئ', continueListening: 'أكمل الاستماع', audioErr: 'تعذّر تشغيل التلاوة. تحقق من الاتصال بالإنترنت.',
       khatma: 'ختمة القرآن', khatmaIn: 'اختم القرآن في', days: 'يومًا', dayN: 'اليوم', todayWird: 'ورد اليوم', pages: 'الصفحات', fromV: 'من', toV: 'إلى', startReading: 'ابدأ القراءة', doneToday: 'أتممت ورد اليوم',
       khatmaDone: 'أتممت الختمة، تقبّل الله منك.', khatmaReset: 'إنهاء الختمة والبدء من جديد', khatmaNote: 'التقسيم حسب صفحات مصحف المدينة النبوية (٦٠٤ صفحات).', khatmaIntro: 'اختر مدة الختمة وسيُقسَّم المصحف إلى ورد يومي.', notStarted: 'لم تبدأ بعد',
+      tracker: 'متابعة الصلوات', trackToday: 'صلوات اليوم', last7: 'آخر ٧ أيام', prayed: 'صلّيت', trackNote: 'السجلّ محفوظ على جهازك فقط.',
+      zakat: 'حاسبة الزكاة', zCash: 'النقود (في اليد والبنك)', zGold: 'وزن الذهب (غرام)', zKarat: 'العيار', zSilver: 'وزن الفضة (غرام)', zTrade: 'قيمة عروض التجارة', zGoldPrice: 'سعر غرام الذهب عيار ٢٤', zSilverPrice: 'سعر غرام الفضة الخالصة',
+      zBasis: 'النصاب يُحسب على', zBasisGold: 'الذهب (٨٥ غرامًا)', zBasisSilver: 'الفضة (٥٩٥ غرامًا)', zTotal: 'مجموع المال', zNisab: 'قيمة النصاب', zDue: 'الزكاة الواجبة (ربع العشر ٢٫٥٪)', zBelow: 'المال أقل من النصاب، فلا زكاة فيه.', zNeedPrice: 'أدخل سعر الغرام لحساب النصاب.',
+      zNote1: 'تجب الزكاة إذا بلغ المال النصاب ومرّ عليه عام هجري كامل.', zNote2: 'اختلف العلماء في نصاب النقود: هل يُقدَّر بالذهب أم بالفضة. اختر ما تعتمده جهة الإفتاء في بلدك.', zNote3: 'حُليّ المرأة المُعدّ للبس فيه خلاف: تجب فيه الزكاة عند الحنفية، ولا تجب عند الجمهور (المالكية والشافعية والحنابلة).', zNote4: 'الحاسبة للتقريب ولا تغني عن سؤال أهل العلم في حالتك.', zPrices: 'الأسعار تُدخلها أنت بعملتك من سعر السوق اليوم.',
+      occasions: 'المناسبات', occNote: 'التواريخ محسوبة بتقويم أم القرى، وقد تختلف يومًا حسب رؤية الهلال في بلدك.', inDays: 'بعد', dayWord: 'يومًا', todayW: 'اليوم', month30: 'مواقيت ٣٠ يومًا', monthNote: 'قارن هذا الجدول بتقويم الأوقاف في بلدك للتأكد من طريقة الحساب.', date: 'التاريخ', mosques: 'أقرب المساجد على الخريطة',
+      o_ramadan: 'أول رمضان', o_fitr: 'عيد الفطر', o_arafah: 'يوم عرفة', o_adha: 'عيد الأضحى', o_newyear: 'رأس السنة الهجرية', o_ashura: 'عاشوراء', o_white: 'الأيام البيض (١٣ و١٤ و١٥)',
       version: 'الإصدار', adhkarNote: 'نصوص الأذكار معروضة بالعربية كما وردت في المصدر.'
     },
     en: {
@@ -98,6 +106,12 @@
       listen: 'Listen to this surah', play: 'Play', pause: 'Pause', stop: 'Stop', reciter: 'Reciter', continueListening: 'Continue listening', audioErr: 'Could not play the recitation. Check your internet connection.',
       khatma: 'Quran khatma', khatmaIn: 'Complete the Quran in', days: 'days', dayN: 'Day', todayWird: "Today's portion", pages: 'Pages', fromV: 'From', toV: 'To', startReading: 'Start reading', doneToday: "I finished today's portion",
       khatmaDone: 'You completed the khatma. May Allah accept it from you.', khatmaReset: 'End this khatma and start again', khatmaNote: 'Portions follow the pages of the Madinah Mushaf (604 pages).', khatmaIntro: 'Choose a duration and the Mushaf is divided into a daily portion.', notStarted: 'Not started',
+      tracker: 'Prayer tracker', trackToday: "Today's prayers", last7: 'Last 7 days', prayed: 'Prayed', trackNote: 'Your record is stored on this device only.',
+      zakat: 'Zakat calculator', zCash: 'Cash (in hand and bank)', zGold: 'Gold weight (grams)', zKarat: 'Karat', zSilver: 'Silver weight (grams)', zTrade: 'Value of trade goods', zGoldPrice: 'Price of 1 g of 24k gold', zSilverPrice: 'Price of 1 g of pure silver',
+      zBasis: 'Nisab is measured by', zBasisGold: 'Gold (85 g)', zBasisSilver: 'Silver (595 g)', zTotal: 'Total wealth', zNisab: 'Nisab value', zDue: 'Zakat due (2.5%)', zBelow: 'Your wealth is below the nisab, so no zakat is due.', zNeedPrice: 'Enter the price per gram to work out the nisab.',
+      zNote1: 'Zakat is due once wealth reaches the nisab and a full lunar year has passed.', zNote2: 'Scholars differ on whether the nisab for cash is measured by gold or by silver. Choose what the fatwa authority in your country uses.', zNote3: "Women's jewellery kept for wearing is disputed: zakat is due on it in the Hanafi school, and not due according to the majority (Maliki, Shafi'i, Hanbali).", zNote4: 'This calculator is an estimate and does not replace asking a scholar about your case.', zPrices: "Enter today's market prices yourself, in your own currency.",
+      occasions: 'Occasions', occNote: 'Dates use the Umm al-Qura calendar and may differ by a day depending on the local moon sighting.', inDays: 'in', dayWord: 'days', todayW: 'Today', month30: 'Times for 30 days', monthNote: 'Compare this table with your local official timetable to check the calculation method.', date: 'Date', mosques: 'Nearest mosques on the map',
+      o_ramadan: 'First of Ramadan', o_fitr: 'Eid al-Fitr', o_arafah: 'Day of Arafah', o_adha: 'Eid al-Adha', o_newyear: 'Islamic New Year', o_ashura: 'Ashura', o_white: 'The White Days (13, 14, 15)',
       version: 'Version', adhkarNote: 'Adhkar are shown in Arabic exactly as in the source.'
     }
   };
@@ -164,6 +178,10 @@
     hadith: '<path d="M6 4h9l3 3v13H6z"/><path d="M9 11h6M9 15h6"/>',
     khatma: '<path d="M5 4h14v16H5z"/><path d="M9 4v9l3-2 3 2V4"/>',
     close: '<path d="M6 6l12 12M18 6L6 18"/>',
+    check: '<path d="M5 12.5l4.5 4.5L19 7.5"/>',
+    tracker: '<rect x="4" y="5" width="16" height="15" rx="2"/><path d="M8 3v4M16 3v4M8 13l3 3 5-6"/>',
+    zakat: '<circle cx="12" cy="12" r="8.5"/><path d="M12 7.5v9M9.5 10a2.5 2 0 0 1 5 0c0 2.5-5 1.5-5 4a2.5 2 0 0 0 5 0"/>',
+    calendar: '<rect x="4" y="5" width="16" height="15" rx="2"/><path d="M8 3v4M16 3v4M4 10h16"/>',
     play: '<path d="M8 5.5v13l11-6.5z"/>',
     pause: '<path d="M7 5h3.5v14H7zM13.5 5H17v14h-3.5z"/>'
   };
@@ -404,7 +422,10 @@
       '<a href="#/hadith">' + icon('hadith') + esc(t('nawawi')) + '</a>' +
       '<a href="#/search">' + icon('search') + esc(t('search')) + '</a>' +
       '<a href="#/tasbih">' + icon('tasbih') + esc(t('tasbih')) + '</a>' +
-      '<a href="#/qibla">' + icon('qibla') + esc(t('qibla')) + '</a></nav>';
+      '<a href="#/qibla">' + icon('qibla') + esc(t('qibla')) + '</a>' +
+      '<a href="#/tracker">' + icon('tracker') + esc(t('tracker')) + '</a>' +
+      '<a href="#/zakat">' + icon('zakat') + esc(t('zakat')) + '</a>' +
+      '<a href="#/occasions">' + icon('calendar') + esc(t('occasions')) + '</a></nav>';
     var k = S.khatma, pct = k ? Math.round(k.done * 100 / k.days) : 0, C = 2 * Math.PI * 32;
     h += '<a class="banner" href="#/khatma"><span class="ring"><svg viewBox="0 0 76 76" aria-hidden="true"><circle cx="38" cy="38" r="32" fill="none" stroke="rgba(255,255,255,.18)" stroke-width="7"/><circle cx="38" cy="38" r="32" fill="none" stroke="#DDBB72" stroke-width="7" stroke-linecap="round" stroke-dasharray="' + (C * pct / 100).toFixed(1) + ' ' + C.toFixed(1) + '"/></svg><span>' + esc(nf(pct)) + '%</span></span>' +
       '<span class="grow"><b>' + esc(t('khatma')) + '</b><span class="dim">' + (k ? esc(t('dayN')) + ' ' + esc(nf(Math.min(k.done + 1, k.days))) + ' / ' + esc(nf(k.days)) : esc(t('notStarted'))) + '</span></span><span class="fwd" style="display:flex">' + icon('back') + '</span></a>';
@@ -446,6 +467,91 @@
     }).join('') + '</ul></section>';
     var mk = methodKey();
     h += '<p class="notice"><b>' + esc(t('method')) + ':</b> ' + esc(METHODS[mk][S.lang] || METHODS[mk].ar) + ' · <b>' + esc(t('asrTime')) + ':</b> ' + esc(S.asr === 'hanafi' ? t('asrHan') : t('asrStd')) + '<br>' + esc(t('methodNote')) + '</p>';
+    h += '<a class="btn" href="#/month">' + esc(t('month30')) + '</a><a class="btn" href="https://www.google.com/maps/search/?api=1&query=' + encodeURIComponent(S.lang === 'ar' ? 'مسجد' : 'mosque') + '" target="_blank" rel="noopener">' + esc(t('mosques')) + '</a>';
+    return { html: h };
+  }
+
+  function viewMonth() {
+    var h = '<header class="head"><a class="iconbtn" href="#/prayer" aria-label="' + esc(t('back')) + '"><span class="flip" style="display:flex">' + icon('back') + '</span></a><div style="flex-grow:1"><h1>' + esc(t('month30')) + '</h1><p class="muted small">' + esc(locName()) + '</p></div></header>';
+    if (!S.loc) return { html: h + locCard() };
+    var rows = '', i, d, df;
+    try { df = new Intl.DateTimeFormat(S.lang === 'ar' ? 'ar-EG' : 'en-US', { day: 'numeric', month: 'numeric' }); } catch (e) { df = null; }
+    for (i = 0; i < 30; i++) {
+      d = dayTimes(i); var base = partsInTz(new Date(), S.loc.tz); base.setDate(base.getDate() + i);
+      rows += '<tr><th scope="row">' + esc(df ? df.format(base) : base.toDateString()) + '</th>' + d.filter(function (x) { return x.k !== 'sunrise'; }).map(function (x) { return '<td>' + esc(fmtTime(x.d).replace(/\s?[صمAP]M?$/i, '')) + '</td>'; }).join('') + '</tr>';
+    }
+    h += '<p class="notice">' + esc(t('monthNote')) + '</p><section class="card" style="padding:10px;overflow-x:auto"><table class="tt"><thead><tr><th scope="col">' + esc(t('date')) + '</th>' + ['fajr', 'dhuhr', 'asr', 'maghrib', 'isha'].map(function (k) { return '<th scope="col">' + esc(t(k)) + '</th>'; }).join('') + '</tr></thead><tbody>' + rows + '</tbody></table></section>';
+    return { html: h };
+  }
+
+  /* ---------- tracker ---------- */
+  function dkey(off) { var d = partsInTz(new Date(), S.loc && S.loc.tz); d.setDate(d.getDate() - (off || 0)); return d.getFullYear() + '-' + ('0' + (d.getMonth() + 1)).slice(-2) + '-' + ('0' + d.getDate()).slice(-2); }
+  var FIVE = ['fajr', 'dhuhr', 'asr', 'maghrib', 'isha'];
+  function viewTracker() {
+    var today = S.track[dkey(0)] || {};
+    var h = '<header class="head"><div><h1>' + esc(t('tracker')) + '</h1><p class="muted small">' + esc(weekday(new Date())) + ' · ' + esc(hijri(new Date())) + '</p></div></header>' +
+      '<section class="card"><h2>' + esc(t('trackToday')) + '</h2><div class="checks">' + FIVE.map(function (k) {
+        return '<button class="check" data-act="track" data-v="' + k + '" aria-pressed="' + (!!today[k]) + '"><span class="box">' + icon('check') + '</span><span>' + esc(t(k)) + '</span></button>';
+      }).join('') + '</div></section><section class="card"><h2>' + esc(t('last7')) + '</h2><div class="week">';
+    var i, wf; try { wf = new Intl.DateTimeFormat(S.lang === 'ar' ? 'ar-EG' : 'en-US', { weekday: 'short' }); } catch (e) { wf = null; }
+    for (i = 6; i >= 0; i--) {
+      var rec = S.track[dkey(i)] || {}, n = FIVE.filter(function (k) { return rec[k]; }).length, dd = partsInTz(new Date(), S.loc && S.loc.tz); dd.setDate(dd.getDate() - i);
+      h += '<div><span class="col"><span style="height:' + (n * 20) + '%"></span></span><b>' + esc(nf(n)) + '</b><span class="muted small">' + esc(wf ? wf.format(dd) : '') + '</span></div>';
+    }
+    h += '</div></section><p class="muted small center">' + esc(t('trackNote')) + '</p>';
+    return { html: h };
+  }
+
+  /* ---------- zakat ---------- */
+  function zField(id, label) { var v = S.zakat[id]; return '<div class="field"><label for="z_' + id + '">' + esc(label) + '</label><input class="search" style="border-radius:14px" id="z_' + id + '" data-z="' + id + '" type="number" inputmode="decimal" min="0" step="any" value="' + (v == null ? '' : esc(v)) + '"></div>'; }
+  function zCalc() {
+    var z = S.zakat, n = function (k) { var x = parseFloat(z[k]); return isNaN(x) || x < 0 ? 0 : x; };
+    var gp = n('goldPrice'), sp = n('silverPrice');
+    var total = n('cash') + n('trade') + n('gold') * (z.karat || 24) / 24 * gp + n('silver') * sp;
+    var nisab = z.basis === 'silver' ? 595 * sp : 85 * gp;
+    return { total: total, nisab: nisab, due: nisab > 0 && total >= nisab ? total * 0.025 : 0, ready: nisab > 0 };
+  }
+  function money(x) { try { return new Intl.NumberFormat(S.lang === 'ar' ? 'ar-EG' : 'en-US', { maximumFractionDigits: 2 }).format(x); } catch (e) { return String(Math.round(x * 100) / 100); } }
+  function zResult() {
+    var r = zCalc();
+    if (!r.ready) return '<p class="muted">' + esc(t('zNeedPrice')) + '</p>';
+    return '<ul class="times"><li><span>' + esc(t('zTotal')) + '</span><span class="t">' + esc(money(r.total)) + '</span></li><li><span>' + esc(t('zNisab')) + '</span><span class="t">' + esc(money(r.nisab)) + '</span></li>' +
+      '<li class="on"><span>' + esc(t('zDue')) + '</span><span class="t">' + esc(money(r.due)) + '</span></li></ul>' + (r.total < r.nisab ? '<p class="notice">' + esc(t('zBelow')) + '</p>' : '');
+  }
+  function viewZakat() {
+    var z = S.zakat;
+    var h = '<header class="head"><div><h1>' + esc(t('zakat')) + '</h1><p class="muted small">' + esc(t('zPrices')) + '</p></div></header>' +
+      '<section class="card">' + zField('goldPrice', t('zGoldPrice')) + zField('silverPrice', t('zSilverPrice')) +
+      '<div class="field"><span class="lbl">' + esc(t('zBasis')) + '</span>' + seg('zbasis', z.basis, [['gold', t('zBasisGold')], ['silver', t('zBasisSilver')]]) + '<p class="small muted">' + esc(t('zNote2')) + '</p></div></section>' +
+      '<section class="card">' + zField('cash', t('zCash')) + zField('gold', t('zGold')) +
+      '<div class="field"><span class="lbl">' + esc(t('zKarat')) + '</span>' + seg('zkarat', z.karat, [[24, nf(24)], [22, nf(22)], [21, nf(21)], [18, nf(18)]]) + '</div>' + zField('silver', t('zSilver')) + zField('trade', t('zTrade')) + '</section>' +
+      '<section class="card" id="zres" aria-live="polite">' + zResult() + '</section>' +
+      '<section class="card stack small"><p>' + esc(t('zNote1')) + '</p><p>' + esc(t('zNote3')) + '</p><p class="muted">' + esc(t('zNote4')) + '</p></section>';
+    return { html: h };
+  }
+
+  /* ---------- occasions ---------- */
+  function hParts(d) {
+    try { var o = {}; new Intl.DateTimeFormat('en-US-u-ca-islamic-umalqura', { day: 'numeric', month: 'numeric', year: 'numeric' }).formatToParts(d).forEach(function (p) { if (p.type !== 'literal') o[p.type] = parseInt(p.value, 10); }); return o; } catch (e) { return null; }
+  }
+  function viewOccasions() {
+    var h = '<header class="head"><div><h1>' + esc(t('occasions')) + '</h1><p class="muted small">' + esc(hijri(new Date())) + '</p></div></header>';
+    var want = [[9, 1, 'o_ramadan'], [10, 1, 'o_fitr'], [12, 9, 'o_arafah'], [12, 10, 'o_adha'], [1, 1, 'o_newyear'], [1, 10, 'o_ashura']], found = [], seen = {}, white = null, i;
+    var base = new Date(); base.setHours(12, 0, 0, 0);
+    var gf; try { gf = new Intl.DateTimeFormat(S.lang === 'ar' ? 'ar-EG' : 'en-US', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' }); } catch (e) { gf = null; }
+    for (i = 0; i < 400; i++) {
+      var d = new Date(base.getTime() + (i + (S.hijri || 0) * -1) * 864e5), hp = hParts(new Date(d.getTime() + (S.hijri || 0) * 864e5));
+      if (!hp) break;
+      var real = new Date(base.getTime() + i * 864e5); hp = hParts(new Date(real.getTime() + (S.hijri || 0) * 864e5));
+      if (!white && hp.day === 13) white = { k: 'o_white', d: real, i: i };
+      want.forEach(function (w) { if (!seen[w[2]] && hp.month === w[0] && hp.day === w[1]) { seen[w[2]] = 1; found.push({ k: w[2], d: real, i: i }); } });
+    }
+    if (white) found.push(white);
+    found.sort(function (a, b) { return a.i - b.i; });
+    if (!found.length) return { html: h + '<p class="notice">' + esc(t('loadError')) + '</p>' };
+    h += '<section class="card"><div class="list">' + found.map(function (x) {
+      return '<a href="#/occasions" style="cursor:default"><span class="num" style="width:auto;min-width:54px;padding:0 8px">' + (x.i === 0 ? esc(t('todayW')) : esc(nf(x.i))) + '</span><span class="grow"><span class="nm" style="font-size:17px">' + esc(t(x.k)) + '</span><span class="muted small">' + esc(gf ? gf.format(x.d) : x.d.toDateString()) + (x.i > 0 ? ' · ' + esc(t('inDays')) + ' ' + esc(nf(x.i)) + ' ' + esc(t('dayWord')) : '') + '</span></span></a>';
+    }).join('') + '</div></section><p class="notice">' + esc(t('occNote')) + '</p>';
     return { html: h };
   }
 
@@ -716,6 +822,7 @@
         '<section class="card src"><h2>الأربعون النووية</h2><p>للإمام يحيى بن شرف النووي رحمه الله، بالنص المنشور في موقع sunnah.com.</p><p>' + L('https://sunnah.com/nawawi40') + '</p></section>' +
         '<section class="card src"><h2>الأذكار</h2><p>من كتاب «حصن المسلم من أذكار الكتاب والسنة» للشيخ د. سعيد بن علي بن وهف القحطاني رحمه الله، مع تخريج الأحاديث كما ورد في الكتاب. عُرضت فقط الأذكار التي تطابق نصّها في نسختين رقميتين مستقلتين من الكتاب.</p></section>' +
         '<section class="card src"><h2>مواقيت الصلاة والقبلة</h2><p>تُحسب على جهازك بمكتبة Adhan مفتوحة المصدر، المبنية على المعادلات الفلكية في كتاب «Astronomical Algorithms» لجان ميوس. طرق الحساب المتاحة هي المعتمدة لدى الهيئات المذكورة في الإعدادات.</p><p>' + L('https://github.com/batoulapps/adhan-js') + '</p></section>' +
+        '<section class="card src"><h2>حاسبة الزكاة</h2><p>نصاب الذهب 85 غرامًا ونصاب الفضة 595 غرامًا والواجب ربع العشر (2.5%)، كما في الموسوعة الفقهية لموقع الدرر السنية وفتاوى دار الإفتاء المصرية.</p><p>' + L('https://dorar.net/feqhia/2153') + '</p></section>' +
         '<section class="card src"><h2>التاريخ الهجري</h2><p>تقويم أم القرى كما توفّره أنظمة التشغيل والمتصفحات، وقد يختلف يومًا عن رؤية الهلال في بلدك. يمكن تعديله من الإعدادات.</p></section>' +
         '<section class="card src"><h2>تنبيه</h2><p>هذه نسخة أولى. المحتوى الديني منقول من مصادره دون تصرّف، ومع ذلك يُنصح بمراجعته من أهل العلم. إذا وجدت خطأ فأبلغنا لتصحيحه.</p><p class="muted small">الخصوصية: لا يجمع التطبيق أي بيانات. موقعك وإعداداتك تبقى على جهازك.</p></section>';
     } else {
@@ -726,6 +833,7 @@
         '<section class="card src"><h2>An-Nawawi’s Forty</h2><p>By Imam Yahya ibn Sharaf an-Nawawi, in the text published on sunnah.com.</p><p>' + L('https://sunnah.com/nawawi40') + '</p></section>' +
         '<section class="card src"><h2>Adhkar</h2><p>From “Hisn al-Muslim” (Fortress of the Muslim) by Shaykh Dr Sa‘id ibn ‘Ali ibn Wahf al-Qahtani, with the hadith references given in the book. Only adhkar whose text matched in two independent digital copies of the book are included.</p></section>' +
         '<section class="card src"><h2>Prayer times and Qibla</h2><p>Calculated on your device with the open-source Adhan library, based on Jean Meeus’s “Astronomical Algorithms”. The available methods are those of the authorities listed in Settings.</p><p>' + L('https://github.com/batoulapps/adhan-js') + '</p></section>' +
+        '<section class="card src"><h2>Zakat calculator</h2><p>Nisab of 85 g of gold or 595 g of silver, and a rate of 2.5%, as stated in the Dorar fiqh encyclopedia and by Egypt’s Dar al-Ifta.</p><p>' + L('https://dorar.net/feqhia/2153') + '</p></section>' +
         '<section class="card src"><h2>Hijri date</h2><p>The Umm al-Qura calendar as provided by your device. It may differ by a day from the local moon sighting, and can be adjusted in Settings.</p></section>' +
         '<section class="card src"><h2>Note</h2><p>This is a first version. Religious content is reproduced from its sources unaltered; review by a qualified scholar is still advised. If you find a mistake, please report it.</p><p class="muted small">Privacy: the app collects no data. Your location and settings stay on your device.</p></section>';
     }
@@ -752,6 +860,10 @@
       case 'search': section = 'quran'; v = viewSearch(); break;
       case 'hadith': v = parts[1] ? viewHadith(parseInt(parts[1], 10) || 1) : viewHadithIndex(); break;
       case 'khatma': v = viewKhatma(); break;
+      case 'month': section = 'prayer'; v = viewMonth(); break;
+      case 'tracker': v = viewTracker(); break;
+      case 'zakat': v = viewZakat(); break;
+      case 'occasions': v = viewOccasions(); break;
       case 'adhkar': section = 'adhkar'; v = parts[1] ? viewAdhkarCat(parts[1]) : viewAdhkarIndex(); break;
       case 'tasbih': section = 'adhkar'; v = viewTasbih(); break;
       case 'settings': section = 'settings'; v = viewSettings(); break;
@@ -818,6 +930,9 @@
     else if (a === 'aud-resume') { if (S.audio) playSurah(S.audio.s, S.audio.t || 0); }
     else if (a === 'aud-toggle') { if (audio && playing) { if (audio.paused) { var pp = audio.play(); if (pp && pp.catch) pp.catch(function () {}); } else audio.pause(); } }
     else if (a === 'aud-stop') stopAudio();
+    else if (a === 'track') { var dk = dkey(0), rec = S.track[dk] || {}; rec[v] = !rec[v]; S.track[dk] = rec; var keys = Object.keys(S.track).sort(); while (keys.length > 120) delete S.track[keys.shift()]; save('track', S.track); render(true); }
+    else if (a === 'zbasis') { S.zakat.basis = v; save('zakat', S.zakat); render(true); }
+    else if (a === 'zkarat') { S.zakat.karat = parseInt(v, 10); save('zakat', S.zakat); render(true); }
     else if (a === 'k-start') { save('khatma', { days: parseInt(v, 10), done: 0 }); render(true); }
     else if (a === 'k-done') { S.khatma.done += 1; save('khatma', S.khatma); render(false); }
     else if (a === 'k-reset') { save('khatma', null); render(false); }
@@ -842,6 +957,11 @@
     }
     else if (a === 'treset') { S.tasbih.n = 0; save('tasbih', S.tasbih); $('#tn').textContent = nf(0); }
     else if (a === 'target') { S.tasbih.target = +el.getAttribute('data-t'); S.tasbih.n = 0; save('tasbih', S.tasbih); render(true); }
+  });
+  document.addEventListener('input', function (e) {
+    var k = e.target.getAttribute && e.target.getAttribute('data-z'); if (!k) return;
+    S.zakat[k] = e.target.value; save('zakat', S.zakat);
+    var r = $('#zres'); if (r) r.innerHTML = zResult();
   });
   document.addEventListener('change', function (e) {
     var el = e.target, a = el.getAttribute && el.getAttribute('data-act');
