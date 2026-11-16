@@ -2,7 +2,7 @@
 (function () {
   'use strict';
 
-  var VERSION = '1.0.0';
+  var VERSION = '2.0.0';
   var $ = function (s, r) { return (r || document).querySelector(s); };
   var esc = function (s) {
     return String(s == null ? '' : s).replace(/[&<>"']/g, function (c) {
@@ -27,7 +27,10 @@
     asr: store.get('asr', 'standard'),
     hijri: store.get('hijri', 0),
     mark: store.get('mark', null),
-    tasbih: store.get('tasbih', { n: 0, target: 33 })
+    tasbih: store.get('tasbih', { n: 0, target: 33 }),
+    reciter: store.get('reciter', 'mishary-alafasy/r1'),
+    audio: store.get('audio', null),
+    khatma: store.get('khatma', null)
   };
   function save(k, v) { S[k] = v; store.set(k, v); }
 
@@ -57,6 +60,12 @@
       hijriAdj: 'تعديل التاريخ الهجري', hijriNote: 'التاريخ محسوب بتقويم أم القرى وقد يختلف يومًا عن رؤية الهلال في بلدك.',
       day: 'يوم', sources: 'المصادر وحول التطبيق', autoMethod: 'تلقائي حسب المنطقة',
       loading: 'جارٍ التحميل…', loadError: 'تعذّر تحميل البيانات. تحقق من الاتصال وحاول مرة أخرى.', retry: 'إعادة المحاولة',
+      search: 'البحث', searchPh: 'اكتب آية أو جزءًا منها', searchHint: 'اكتب ثلاثة أحرف أو أكثر من الآية للبحث في القرآن الكريم.', results: 'نتيجة', noResults: 'لا توجد نتائج.', moreResults: 'عُرضت أول ٥٠ نتيجة. أضف كلمات لتضييق البحث.',
+      ayahDay: 'آية اليوم', readTafsir: 'قراءة التفسير', hadithDay: 'حديث اليوم', nawawi: 'الأربعون النووية', hadithN: 'الحديث', surah: 'سورة',
+      tafsir: 'التفسير', tafsirM: 'التفسير الميسّر', translation: 'الترجمة الإنجليزية', close: 'إغلاق',
+      listen: 'استماع إلى السورة', play: 'تشغيل', pause: 'إيقاف مؤقت', stop: 'إيقاف', reciter: 'القارئ', continueListening: 'أكمل الاستماع', audioErr: 'تعذّر تشغيل التلاوة. تحقق من الاتصال بالإنترنت.',
+      khatma: 'ختمة القرآن', khatmaIn: 'اختم القرآن في', days: 'يومًا', dayN: 'اليوم', todayWird: 'ورد اليوم', pages: 'الصفحات', fromV: 'من', toV: 'إلى', startReading: 'ابدأ القراءة', doneToday: 'أتممت ورد اليوم',
+      khatmaDone: 'أتممت الختمة، تقبّل الله منك.', khatmaReset: 'إنهاء الختمة والبدء من جديد', khatmaNote: 'التقسيم حسب صفحات مصحف المدينة النبوية (٦٠٤ صفحات).', khatmaIntro: 'اختر مدة الختمة وسيُقسَّم المصحف إلى ورد يومي.', notStarted: 'لم تبدأ بعد',
       version: 'الإصدار', adhkarNote: 'نصوص الأذكار معروضة بالعربية كما وردت في المصدر.'
     },
     en: {
@@ -83,6 +92,12 @@
       hijriAdj: 'Hijri date adjustment', hijriNote: 'The date uses the Umm al-Qura calendar and may differ by a day from the local moon sighting.',
       day: 'day', sources: 'Sources & about', autoMethod: 'Automatic by region',
       loading: 'Loading…', loadError: 'Could not load the data. Check your connection and try again.', retry: 'Try again',
+      search: 'Search', searchPh: 'Type a verse or part of it (Arabic)', searchHint: 'Type three or more Arabic letters of a verse to search the Quran.', results: 'results', noResults: 'No results.', moreResults: 'Showing the first 50 results. Add more words to narrow it down.',
+      ayahDay: 'Verse of the day', readTafsir: 'Read the tafsir', hadithDay: 'Hadith of the day', nawawi: "An-Nawawi's Forty", hadithN: 'Hadith', surah: 'Surah',
+      tafsir: 'Tafsir', tafsirM: 'Tafsir al-Muyassar (Arabic)', translation: 'Translation (Saheeh International)', close: 'Close',
+      listen: 'Listen to this surah', play: 'Play', pause: 'Pause', stop: 'Stop', reciter: 'Reciter', continueListening: 'Continue listening', audioErr: 'Could not play the recitation. Check your internet connection.',
+      khatma: 'Quran khatma', khatmaIn: 'Complete the Quran in', days: 'days', dayN: 'Day', todayWird: "Today's portion", pages: 'Pages', fromV: 'From', toV: 'To', startReading: 'Start reading', doneToday: "I finished today's portion",
+      khatmaDone: 'You completed the khatma. May Allah accept it from you.', khatmaReset: 'End this khatma and start again', khatmaNote: 'Portions follow the pages of the Madinah Mushaf (604 pages).', khatmaIntro: 'Choose a duration and the Mushaf is divided into a daily portion.', notStarted: 'Not started',
       version: 'Version', adhkarNote: 'Adhkar are shown in Arabic exactly as in the source.'
     }
   };
@@ -123,6 +138,16 @@
     { ar: 'إسطنبول', en: 'Istanbul', lat: 41.0082, lng: 28.9784, tz: 'Europe/Istanbul' }
   ];
 
+  var RECITERS = [
+    ['mishary-alafasy/r1', 'مشاري العفاسي', 'Mishary Alafasy'],
+    ['mahmoud-husary/r1', 'محمود خليل الحصري', 'Mahmoud Khalil Al-Husary'],
+    ['muhammad-minshawi/r1', 'محمد صديق المنشاوي', 'Muhammad Siddiq Al-Minshawi'],
+    ['abdulbasit-abdulsamad/r3', 'عبدالباسط عبدالصمد', 'Abdulbasit Abdulsamad'],
+    ['maher-muaiqly/r1', 'ماهر المعيقلي', 'Maher Al-Muaiqly'],
+    ['abdulrahman-sudais/r1', 'عبدالرحمن السديس', 'Abdulrahman As-Sudais']
+  ];
+  function reciterName() { var r = RECITERS.filter(function (x) { return x[0] === S.reciter; })[0] || RECITERS[0]; return S.lang === 'ar' ? r[1] : r[2]; }
+
   /* ---------- icons ---------- */
   var IC = {
     home: '<path d="M4 11l8-7 8 7v9h-5v-6H9v6H4z"/>',
@@ -134,9 +159,15 @@
     qibla: '<circle cx="12" cy="12" r="9"/><path d="M15.5 8.5l-2 5-5 2 2-5z"/>',
     back: '<path d="M9 5l7 7-7 7"/>',
     bookmark: '<path d="M7 4h10v16l-5-4-5 4z"/>',
-    info: '<circle cx="12" cy="12" r="9"/><path d="M12 11v5M12 8h.01"/>'
+    info: '<circle cx="12" cy="12" r="9"/><path d="M12 11v5M12 8h.01"/>',
+    search: '<circle cx="11" cy="11" r="6.5"/><path d="M16 16l4 4"/>',
+    hadith: '<path d="M6 4h9l3 3v13H6z"/><path d="M9 11h6M9 15h6"/>',
+    khatma: '<path d="M5 4h14v16H5z"/><path d="M9 4v9l3-2 3 2V4"/>',
+    close: '<path d="M6 6l12 12M18 6L6 18"/>',
+    play: '<path d="M8 5.5v13l11-6.5z"/>',
+    pause: '<path d="M7 5h3.5v14H7zM13.5 5H17v14h-3.5z"/>'
   };
-  function icon(n) { return '<svg class="i" aria-hidden="true" viewBox="0 0 24 24">' + IC[n] + '</svg>'; }
+  function icon(n, fill) { return '<svg class="i' + (fill ? ' fill' : '') + '" aria-hidden="true" viewBox="0 0 24 24">' + IC[n] + '</svg>'; }
 
   /* ---------- appearance ---------- */
   var mq = window.matchMedia ? window.matchMedia('(prefers-color-scheme: dark)') : null;
@@ -148,7 +179,7 @@
     if (dark) el.setAttribute('data-dark', '1'); else el.removeAttribute('data-dark');
     el.style.setProperty('--fs', String(S.fs));
     var m = $('meta[name="theme-color"]');
-    if (m) m.setAttribute('content', getComputedStyle(el).getPropertyValue('--bg').trim() || '#F3F6F4');
+    if (m) m.setAttribute('content', getComputedStyle(el).getPropertyValue('--brand2').trim() || '#0A3427');
     document.title = t('app');
   }
   if (mq && mq.addEventListener) mq.addEventListener('change', function () { applyLook(); });
@@ -225,6 +256,96 @@
   function stripMarks(s) { return String(s).replace(/[ً-ٰٟۖ-ۭـ]/g, '').replace(/[أإآٱ]/g, 'ا').trim().toLowerCase(); }
   function ayahOnly(text) { return String(text).replace(/[ \s]*[٠-٩]+\s*$/, ''); }
 
+  function norm(s) {
+    return String(s).replace(/[ً-ٰٟۖ-ۭـ]/g, '').replace(/[أإآٱ]/g, 'ا').replace(/ى/g, 'ي').replace(/ة/g, 'ه').replace(/ؤ/g, 'و').replace(/ئ/g, 'ي').replace(/[^ء-ي]/g, '');
+  }
+  function dayOfYear() { var d = new Date(); return Math.floor((Date.UTC(d.getFullYear(), d.getMonth(), d.getDate()) - Date.UTC(d.getFullYear(), 0, 0)) / 864e5); }
+  function sName(s) { return S.lang === 'ar' ? s.name : s.en; }
+
+  /* ---------- audio ---------- */
+  var audio = null, playing = null, lastSave = 0, dockMsg = '', selVerse = null;
+  function audioUrl(s) { return 'https://cdn.mp3quran.net/audio/' + S.reciter + '/' + ('00' + s).slice(-3) + '.mp3'; }
+  function ensureAudio() {
+    if (audio) return audio;
+    audio = new Audio(); audio.preload = 'none';
+    audio.addEventListener('timeupdate', function () {
+      var now = Date.now();
+      if (playing && now - lastSave > 4000) { lastSave = now; save('audio', { s: playing, t: Math.floor(audio.currentTime) }); }
+    });
+    audio.addEventListener('play', function () { dockMsg = ''; renderDock(); });
+    audio.addEventListener('pause', function () { if (playing && audio.currentTime > 0) save('audio', { s: playing, t: Math.floor(audio.currentTime) }); renderDock(); });
+    audio.addEventListener('ended', function () { if (playing) save('audio', { s: playing, t: 0 }); renderDock(); });
+    audio.addEventListener('error', function () { if (playing) { dockMsg = t('audioErr'); renderDock(); } });
+    return audio;
+  }
+  function setMedia(s) {
+    if (!('mediaSession' in navigator) || typeof MediaMetadata === 'undefined') return;
+    var q = cache.quran, nm = q && q[s - 1] ? q[s - 1].name : String(s);
+    try {
+      navigator.mediaSession.metadata = new MediaMetadata({ title: 'سورة ' + nm, artist: reciterName(), album: 'القرآن الكريم' });
+      navigator.mediaSession.setActionHandler('play', function () { audio.play(); });
+      navigator.mediaSession.setActionHandler('pause', function () { audio.pause(); });
+    } catch (e) { /* ignore */ }
+  }
+  function playSurah(s, at) {
+    var a = ensureAudio(), url = audioUrl(s);
+    if (playing !== s || a.getAttribute('src') !== url) {
+      playing = s; a.setAttribute('src', url);
+      if (at > 0) { var seek = function () { a.removeEventListener('loadedmetadata', seek); try { a.currentTime = at; } catch (e) { /* ignore */ } }; a.addEventListener('loadedmetadata', seek); }
+    }
+    dockMsg = ''; var p = a.play(); if (p && p.catch) p.catch(function () {});
+    setMedia(s); renderDock();
+  }
+  function stopAudio() { if (audio) { audio.pause(); } playing = null; dockMsg = ''; renderDock(); }
+  function renderDock() {
+    var dock = $('#dock'); if (!dock) return;
+    var h = '';
+    if (playing) {
+      var q = cache.quran, nm = q && q[playing - 1] ? (S.lang === 'ar' ? 'سورة ' + q[playing - 1].name : q[playing - 1].en) : '';
+      var paused = !audio || audio.paused;
+      h += '<div class="bar"><span class="lbl">' + esc(dockMsg || (nm + ' · ' + reciterName())) + '</span><span class="acts">' +
+        '<button data-act="aud-toggle" aria-label="' + esc(paused ? t('play') : t('pause')) + '">' + icon(paused ? 'play' : 'pause', true) + '</button>' +
+        '<button class="ghost" data-act="aud-stop" aria-label="' + esc(t('stop')) + '">' + icon('close') + '</button></span></div>';
+    }
+    if (selVerse) {
+      h += '<div class="bar"><span class="lbl">' + esc(t('ayah')) + ' ' + esc(nf(selVerse.v)) + '</span><span class="acts">' +
+        '<button data-act="tafsir">' + esc(t('tafsir')) + '</button><button data-act="mark">' + esc(t('saveMark')) + '</button></span></div>';
+    }
+    dock.innerHTML = h;
+  }
+
+  /* ---------- tafsir sheet ---------- */
+  function closeSheet() { var el = $('#sheet'); if (el) el.parentNode.removeChild(el); }
+  function openTafsir(sid, v) {
+    closeSheet();
+    load('quran').then(function (q) {
+      var s = q[sid - 1]; if (!s || !s.verses[v - 1]) return;
+      var el = document.createElement('div'); el.className = 'sheet'; el.id = 'sheet'; el.setAttribute('role', 'dialog'); el.setAttribute('aria-modal', 'true'); el.setAttribute('aria-label', t('tafsir'));
+      el.innerHTML = '<div><div class="head"><h2>' + esc(sName(s)) + ' · ' + esc(t('ayah')) + ' ' + esc(nf(v)) + '</h2><button class="iconbtn" data-act="sheet-close" aria-label="' + esc(t('close')) + '">' + icon('close') + '</button></div>' +
+        '<p class="v" lang="ar">' + esc(s.verses[v - 1]) + '</p><h2>' + esc(t('tafsirM')) + '</h2><p class="body" id="tfs" lang="ar" dir="rtl">' + esc(t('loading')) + '</p>' +
+        (S.lang === 'en' ? '<h2>' + esc(t('translation')) + '</h2><p class="body" id="trn" lang="en" dir="ltr">' + esc(t('loading')) + '</p>' : '') + '</div>';
+      el.addEventListener('click', function (e) { if (e.target === el) closeSheet(); });
+      document.body.appendChild(el);
+      var b = $('[data-act="sheet-close"]', el); if (b) b.focus();
+      load('meta').then(function (m) {
+        var i = 0; m.taf.forEach(function (st, k) { if (st <= sid) i = k; });
+        return load('tafsir-' + (i + 1));
+      }).then(function (tf) { var x = $('#tfs'); if (x) x.textContent = (tf[String(sid)] || [])[v - 1] || ''; })
+        .catch(function () { var x = $('#tfs'); if (x) x.textContent = t('loadError'); });
+      if (S.lang === 'en') load('en').then(function (en) { var x = $('#trn'); if (x) x.textContent = (en[sid - 1] || [])[v - 1] || ''; }).catch(function () { var x = $('#trn'); if (x) x.textContent = t('loadError'); });
+    }).catch(function () {});
+  }
+  document.addEventListener('keydown', function (e) { if (e.key === 'Escape') closeSheet(); });
+
+  /* ---------- khatma ---------- */
+  function khatmaToday(m) {
+    var k = S.khatma; if (!k) return null;
+    var from = Math.floor(k.done * 604 / k.days) + 1, to = Math.floor((k.done + 1) * 604 / k.days);
+    if (to < from) to = from;
+    var st = m.pages[from - 1], nx = to < 604 ? m.pages[to] : null;
+    return { from: from, to: to, start: st, next: nx };
+  }
+
   /* ---------- views ---------- */
   var cleanup = null;
   var counts = {};
@@ -256,36 +377,59 @@
       '<div class="dim">' + esc(t('remaining')) + ' <span id="cd">' + esc(countdown(np.d)) + '</span></div></div></div><hr><div class="five">' + five + '</div></section>';
   }
 
+  var ORN = '<rect x="22" y="22" width="56" height="56"/><rect x="22" y="22" width="56" height="56" transform="rotate(45 50 50)"/><circle cx="50" cy="50" r="40"/><circle cx="50" cy="50" r="18"/><rect x="8" y="8" width="84" height="84" transform="rotate(22.5 50 50)"/><rect x="8" y="8" width="84" height="84" transform="rotate(67.5 50 50)"/>';
+  function orn(c) { return '<svg class="orn ' + c + '" viewBox="0 0 100 100" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="1.2">' + ORN + '</svg>'; }
+  function heroSvg() {
+    var win = function (x) { return '<path d="M' + x + ' 268v-26a9 9 0 0 1 18 0v26z"/>'; };
+    return '<svg class="sky" viewBox="0 0 390 310" aria-hidden="true"><defs><linearGradient id="skyg" x1="0" y1="0" x2="0" y2="1">' +
+      '<stop offset="0" style="stop-color:var(--brand2)"/><stop offset=".75" style="stop-color:var(--brand)"/><stop offset="1" stop-color="#C79F4B" stop-opacity=".55"/></linearGradient></defs>' +
+      '<rect width="390" height="310" style="fill:var(--brand2)"/><rect width="390" height="310" fill="url(#skyg)"/>' +
+      '<g fill="#F3E3B5"><circle cx="30" cy="70" r="1.3"/><circle cx="62" cy="128" r="1"/><circle cx="118" cy="84" r="1.2"/><circle cx="150" cy="118" r="1"/><circle cx="246" cy="108" r="1.2"/><circle cx="286" cy="84" r="1"/><circle cx="338" cy="122" r="1.3"/><circle cx="366" cy="76" r="1"/><circle cx="20" cy="160" r="1"/><circle cx="372" cy="170" r="1"/></g>' +
+      '<path d="M96 96a22 22 0 1 0 20 32 18 18 0 1 1-20-32z" fill="#E7C97F"/>' +
+      '<g fill="#03120D" fill-opacity=".72"><rect x="92" y="212" width="206" height="60"/><path d="M148 212c0-62 94-62 94 0z"/><path d="M100 212c0-30 42-30 42 0zM248 212c0-30 42-30 42 0z"/>' +
+      '<rect x="60" y="128" width="18" height="144"/><path d="M56 128h26l-13-26z"/><rect x="55" y="170" width="28" height="6"/><rect x="312" y="128" width="18" height="144"/><path d="M308 128h26l-13-26z"/><rect x="307" y="170" width="28" height="6"/><rect x="0" y="270" width="390" height="40"/></g>' +
+      '<g fill="none" stroke="#E7C97F" stroke-width="2" stroke-linecap="round"><path d="M195 166v-16"/><path d="M69 102v-10M321 102v-10"/></g><circle cx="195" cy="146" r="3.5" fill="#E7C97F"/>' +
+      '<g fill="#F0CF86" fill-opacity=".92">' + win(108) + win(147) + win(186) + win(225) + win(264) + '</g></svg>';
+  }
   function viewHome() {
     var now = new Date();
-    var h = '<header class="head"><div><h1>' + esc(t('salam')) + '</h1><p class="muted small">' + esc(weekday(now)) + ' · ' + esc(hijri(now)) + '</p></div>' +
-      '<a class="iconbtn" href="#/settings" aria-label="' + esc(t('settings')) + '">' + icon('settings') + '</a></header>';
+    var h = '<section class="hero">' + heroSvg() + '<div class="title"><b>' + esc(t('app')) + '</b><span>' + esc(weekday(now)) + ' · ' + esc(hijri(now)) + '</span></div>' +
+      '<div class="top"><a href="#/search" aria-label="' + esc(t('search')) + '">' + icon('search') + '</a><a href="#/settings" aria-label="' + esc(t('settings')) + '">' + icon('settings') + '</a></div></section>' +
+      '<section class="ayahcard" aria-label="' + esc(t('ayahDay')) + '">' + orn('a') + orn('b') + '<span class="pill">' + icon('quran') + esc(t('ayahDay')) + '</span><div id="ayah"><p class="ref">' + esc(t('loading')) + '</p></div></section>';
     var np = nextPrayer();
     h += np ? nextCard(np) : locCard();
-    h += '<nav class="quick" aria-label="' + esc(t('home')) + '">' +
+    h += '<div id="hd"></div><nav class="tiles" aria-label="' + esc(t('home')) + '">' +
       '<a href="#/quran">' + icon('quran') + esc(t('quran')) + '</a>' +
       '<a href="#/adhkar">' + icon('adhkar') + esc(t('adhkar')) + '</a>' +
+      '<a href="#/hadith">' + icon('hadith') + esc(t('nawawi')) + '</a>' +
+      '<a href="#/search">' + icon('search') + esc(t('search')) + '</a>' +
       '<a href="#/tasbih">' + icon('tasbih') + esc(t('tasbih')) + '</a>' +
       '<a href="#/qibla">' + icon('qibla') + esc(t('qibla')) + '</a></nav>';
-    h += '<div id="cont"></div><div id="daily"></div>';
+    var k = S.khatma, pct = k ? Math.round(k.done * 100 / k.days) : 0, C = 2 * Math.PI * 32;
+    h += '<a class="banner" href="#/khatma"><span class="ring"><svg viewBox="0 0 76 76" aria-hidden="true"><circle cx="38" cy="38" r="32" fill="none" stroke="rgba(255,255,255,.18)" stroke-width="7"/><circle cx="38" cy="38" r="32" fill="none" stroke="#DDBB72" stroke-width="7" stroke-linecap="round" stroke-dasharray="' + (C * pct / 100).toFixed(1) + ' ' + C.toFixed(1) + '"/></svg><span>' + esc(nf(pct)) + '%</span></span>' +
+      '<span class="grow"><b>' + esc(t('khatma')) + '</b><span class="dim">' + (k ? esc(t('dayN')) + ' ' + esc(nf(Math.min(k.done + 1, k.days))) + ' / ' + esc(nf(k.days)) : esc(t('notStarted'))) + '</span></span><span class="fwd" style="display:flex">' + icon('back') + '</span></a>';
+    h += '<div id="cont" class="stack"></div><div id="daily"></div>';
     return {
       html: h,
       after: function () {
-        if (S.mark) {
-          load('quran').then(function (q) {
-            var s = q[S.mark.s - 1], el = $('#cont'); if (!s || !el) return;
-            el.innerHTML = '<a class="card rowcard" href="#/quran/' + s.id + '/' + S.mark.v + '"><span class="round">' + icon('bookmark') + '</span>' +
-              '<span class="grow"><span class="muted small">' + esc(t('continueReading')) + '</span><b style="font-size:17px">' + esc(S.lang === 'ar' ? s.name : s.en) + '</b></span>' +
-              '<span class="muted small">' + esc(t('ayah')) + ' ' + esc(nf(S.mark.v)) + '</span></a>';
-          }).catch(function () {});
-        }
-        load('adhkar').then(function (a) {
-          var el = $('#daily'); if (!el) return;
-          var pool = a.cats[0].items.filter(function (x) { return x.t.length < 200; });
-          if (!pool.length) return;
-          var d = new Date(), day = Math.floor((Date.UTC(d.getFullYear(), d.getMonth(), d.getDate()) - Date.UTC(d.getFullYear(), 0, 0)) / 864e5);
-          var it = pool[day % pool.length];
-          el.innerHTML = '<section class="daily"><span class="lbl">' + esc(t('dailyDhikr')) + '</span><p class="ar-text" lang="ar">' + esc(it.t) + '</p><span class="muted small" lang="ar">' + esc(a.source) + '</span></section>';
+        Promise.all([load('quran'), load('meta')]).then(function (r) {
+          var q = r[0], m = r[1], el = $('#ayah'); if (!el) return;
+          var a = m.ayah[dayOfYear() % m.ayah.length], s = q[a[0] - 1];
+          el.innerHTML = '<p class="v" lang="ar">' + esc(ayahOnly(s.verses[a[1] - 1])) + '</p><p class="ref" style="margin-bottom:10px">(' + esc(sName(s)) + ': ' + esc(nf(a[1])) + ')</p>' +
+            '<a class="more" href="#/quran/' + a[0] + '/' + a[1] + '/t">' + esc(t('readTafsir')) + '</a>';
+          var c = $('#cont'), out = '';
+          if (S.audio && q[S.audio.s - 1]) {
+            out += '<div class="card rowcard"><button class="round" data-act="aud-resume" aria-label="' + esc(t('play')) + '">' + icon('play', true) + '</button><span class="grow"><span class="muted small">' + esc(t('continueListening')) + '</span><b style="font-size:17px">' + esc(sName(q[S.audio.s - 1])) + '</b></span><span class="muted small">' + esc(reciterName()) + '</span></div>';
+          }
+          if (S.mark && q[S.mark.s - 1]) {
+            out += '<a class="card rowcard" href="#/quran/' + S.mark.s + '/' + S.mark.v + '"><span class="round">' + icon('bookmark') + '</span><span class="grow"><span class="muted small">' + esc(t('continueReading')) + '</span><b style="font-size:17px">' + esc(sName(q[S.mark.s - 1])) + '</b></span><span class="muted small">' + esc(t('ayah')) + ' ' + esc(nf(S.mark.v)) + '</span></a>';
+          }
+          if (c) c.innerHTML = out;
+        }).catch(function () { var el = $('#ayah'); if (el) el.innerHTML = '<p class="ref">' + esc(t('loadError')) + '</p>'; });
+        load('hadith').then(function (hs) {
+          var el = $('#hd'); if (!el) return;
+          var x = hs[dayOfYear() % hs.length];
+          el.innerHTML = '<a class="card hadith" href="#/hadith/' + x.n + '"><span class="pill">' + icon('hadith') + esc(t('hadithDay')) + '</span><span class="tx" lang="ar">' + esc(x.ar) + '</span><span class="muted small">' + esc(t('nawawi')) + ' · ' + esc(t('hadithN')) + ' ' + esc(nf(x.n)) + '</span></a>';
         }).catch(function () {});
       }
     };
@@ -349,9 +493,11 @@
     el.innerHTML = '<p>' + esc(t('loadError')) + '</p><button class="btn" data-act="reload">' + esc(t('retry')) + '</button>';
   }
 
-  function viewSurah(id, verse) {
+  function viewSurah(id, verse, openT) {
     var h = '<header class="head"><a class="iconbtn" href="#/quran" aria-label="' + esc(t('back')) + '"><span class="flip" style="display:flex">' + icon('back') + '</span></a><div style="flex-grow:1" id="shead"><h1>' + esc(t('quran')) + '</h1></div></header>' +
-      '<section class="card mushaf" id="mushaf"><p class="muted">' + esc(t('loading')) + '</p></section><div id="pager"></div><div id="bar"></div>';
+      '<section class="card player"><button class="round" data-act="aud-play" data-s="' + id + '" aria-label="' + esc(t('play')) + '">' + icon('play', true) + '</button><div class="grow"><b>' + esc(t('listen')) + '</b><label class="sr-only" for="rec">' + esc(t('reciter')) + '</label><select id="rec" data-act="reciter">' +
+      RECITERS.map(function (r) { return '<option value="' + r[0] + '"' + (S.reciter === r[0] ? ' selected' : '') + '>' + esc(S.lang === 'ar' ? r[1] : r[2]) + '</option>'; }).join('') + '</select></div></section>' +
+      '<section class="card mushaf" id="mushaf"><p class="muted">' + esc(t('loading')) + '</p></section><div id="pager"></div>';
     return {
       html: h,
       after: function () {
@@ -374,16 +520,110 @@
           function pick(el) {
             var old = $('.ayat .sel'); if (old) old.classList.remove('sel');
             el.classList.add('sel');
-            var n = +el.getAttribute('data-v');
-            $('#bar').innerHTML = '<div class="actionbar"><div><span>' + esc(t('ayah')) + ' ' + esc(nf(n)) + '</span><button data-act="mark" data-s="' + s.id + '" data-v="' + n + '">' + esc(t('saveMark')) + '</button></div></div>';
+            selVerse = { s: s.id, v: +el.getAttribute('data-v') }; renderDock();
           }
           box.addEventListener('click', function (e) { var el = e.target.closest ? e.target.closest('span[data-v]') : null; if (el) pick(el); });
           box.addEventListener('keydown', function (e) { if ((e.key === 'Enter' || e.key === ' ') && e.target.getAttribute && e.target.getAttribute('data-v')) { e.preventDefault(); pick(e.target); } });
           if (verse) {
             var target = $('.ayat span[data-v="' + verse + '"]');
-            if (target) setTimeout(function () { target.scrollIntoView({ block: 'center' }); target.classList.add('sel'); }, 60);
+            if (target) setTimeout(function () { target.scrollIntoView({ block: 'center' }); pick(target); if (openT) openTafsir(s.id, verse); }, 60);
           }
         }).catch(function () { loadFail('#mushaf'); });
+      }
+    };
+  }
+
+  var normCache = null;
+  function viewSearch() {
+    var h = '<header class="head"><div><h1>' + esc(t('search')) + '</h1><p class="muted small">' + esc(t('quran')) + '</p></div></header>' +
+      '<label class="sr-only" for="sq">' + esc(t('searchPh')) + '</label><input class="search" id="sq" type="search" lang="ar" dir="rtl" placeholder="' + esc(t('searchPh')) + '" autocomplete="off">' +
+      '<p class="muted small" id="sinfo" role="status">' + esc(t('searchHint')) + '</p><section class="card" id="sres" hidden></section>';
+    return {
+      html: h,
+      after: function () {
+        var inp = $('#sq'), timer = null;
+        function run() {
+          var v = norm(inp.value), info = $('#sinfo'), box = $('#sres'); if (!info || !box) return;
+          if (v.length < 3) { box.hidden = true; info.textContent = t('searchHint'); return; }
+          info.textContent = t('loading');
+          Promise.all([load('quran'), load('search')]).then(function (r) {
+            var q = r[0], sr = r[1];
+            if (!normCache) normCache = sr.map(function (a) { return a.map(norm); });
+            var out = [], total = 0, i, j;
+            for (i = 0; i < 114; i++) for (j = 0; j < normCache[i].length; j++) {
+              if (normCache[i][j].indexOf(v) !== -1) { total++; if (out.length < 50) out.push([i, j]); }
+            }
+            if (norm(inp.value) !== v) return;
+            info.textContent = total ? nf(total) + ' ' + t('results') + (total > 50 ? ' — ' + t('moreResults') : '') : t('noResults');
+            box.hidden = !total;
+            box.innerHTML = out.map(function (x) {
+              var s = q[x[0]];
+              return '<a class="result" href="#/quran/' + s.id + '/' + (x[1] + 1) + '"><span class="v" lang="ar">' + esc(s.verses[x[1]]) + '</span><span class="r">' + esc(sName(s)) + ' · ' + esc(t('ayah')) + ' ' + esc(nf(x[1] + 1)) + '</span></a>';
+            }).join('');
+          }).catch(function () { info.textContent = t('loadError'); });
+        }
+        inp.addEventListener('input', function () { clearTimeout(timer); timer = setTimeout(run, 300); });
+        inp.focus();
+      }
+    };
+  }
+
+  function viewHadithIndex() {
+    var h = '<header class="head"><div><h1>' + esc(t('nawawi')) + '</h1><p class="muted small" lang="ar">الإمام يحيى بن شرف النووي</p></div></header><section class="card"><div class="list" id="hlist"><p class="muted">' + esc(t('loading')) + '</p></div></section>';
+    return {
+      html: h,
+      after: function () {
+        load('hadith').then(function (hs) {
+          var l = $('#hlist'); if (!l) return;
+          l.innerHTML = hs.map(function (x) {
+            return '<a href="#/hadith/' + x.n + '"><span class="num">' + esc(nf(x.n)) + '</span><span class="grow"><span class="nm" style="font-size:16px">' + esc(t('hadithN')) + ' ' + esc(nf(x.n)) + '</span><span class="muted small" lang="ar" dir="rtl" style="white-space:nowrap;overflow:hidden;text-overflow:ellipsis">' + esc(x.ar.slice(0, 70)) + '…</span></span></a>';
+          }).join('');
+        }).catch(function () { loadFail('#hlist'); });
+      }
+    };
+  }
+  function viewHadith(n) {
+    var h = '<header class="head"><a class="iconbtn" href="#/hadith" aria-label="' + esc(t('back')) + '"><span class="flip" style="display:flex">' + icon('back') + '</span></a><div style="flex-grow:1"><h1>' + esc(t('hadithN')) + ' ' + esc(nf(n)) + '</h1><p class="muted small">' + esc(t('nawawi')) + '</p></div></header><div id="hbody" class="stack"><p class="muted">' + esc(t('loading')) + '</p></div>';
+    return {
+      html: h,
+      after: function () {
+        load('hadith').then(function (hs) {
+          var x = hs[n - 1], b = $('#hbody'); if (!b) return;
+          if (!x) { location.hash = '#/hadith'; return; }
+          var out = '<article class="card"><p class="ar-text" lang="ar">' + esc(x.ar) + '</p></article>';
+          if (S.lang === 'en' && x.en) out += '<article class="card"><p lang="en" dir="ltr" style="line-height:1.8">' + esc(x.en) + '</p></article>';
+          out += '<div class="pager">' + (n > 1 ? '<a class="btn" href="#/hadith/' + (n - 1) + '">' + esc(t('hadithN')) + ' ' + esc(nf(n - 1)) + '</a>' : '<span></span>') + (n < hs.length ? '<a class="btn" href="#/hadith/' + (n + 1) + '">' + esc(t('hadithN')) + ' ' + esc(nf(n + 1)) + '</a>' : '<span></span>') + '</div>';
+          b.innerHTML = out;
+        }).catch(function () { loadFail('#hbody'); });
+      }
+    };
+  }
+
+  function viewKhatma() {
+    var h = '<header class="head"><div><h1>' + esc(t('khatma')) + '</h1><p class="muted small">' + esc(t('khatmaNote')) + '</p></div></header><div id="kbody" class="stack"><p class="muted">' + esc(t('loading')) + '</p></div>';
+    return {
+      html: h,
+      after: function () {
+        Promise.all([load('quran'), load('meta')]).then(function (r) {
+          var q = r[0], m = r[1], b = $('#kbody'); if (!b) return;
+          var k = S.khatma;
+          if (!k) {
+            b.innerHTML = '<section class="card stack"><h2>' + esc(t('khatmaIn')) + '</h2><p class="muted small">' + esc(t('khatmaIntro')) + '</p><div class="chips">' +
+              [30, 60, 90, 120].map(function (d) { return '<button class="chip" data-act="k-start" data-v="' + d + '">' + esc(nf(d)) + ' ' + esc(t('days')) + '</button>'; }).join('') + '</div></section>';
+            return;
+          }
+          if (k.done >= k.days) {
+            b.innerHTML = '<section class="card stack center"><p class="big">' + esc(nf(100)) + '%</p><p>' + esc(t('khatmaDone')) + '</p><button class="btn primary" data-act="k-reset">' + esc(t('khatmaReset')) + '</button></section>';
+            return;
+          }
+          var d = khatmaToday(m), s1 = q[d.start[0] - 1], end;
+          if (d.next) { end = d.next[1] > 1 ? [d.next[0], d.next[1] - 1] : [d.next[0] - 1, q[d.next[0] - 2].verses.length]; } else end = [114, q[113].verses.length];
+          var s2 = q[end[0] - 1], pct = Math.round(k.done * 100 / k.days);
+          b.innerHTML = '<section class="next"><div class="top"><div><div class="dim">' + esc(t('todayWird')) + '</div><div class="name">' + esc(t('dayN')) + ' ' + esc(nf(k.done + 1)) + ' / ' + esc(nf(k.days)) + '</div></div><div style="text-align:end"><div class="time">' + esc(nf(pct)) + '%</div></div></div><hr>' +
+            '<div class="dim">' + esc(t('pages')) + ': ' + esc(nf(d.from)) + ' – ' + esc(nf(d.to)) + '</div></section>' +
+            '<section class="card"><ul class="times"><li><span>' + esc(t('fromV')) + '</span><span>' + esc(sName(s1)) + ' · ' + esc(t('ayah')) + ' ' + esc(nf(d.start[1])) + '</span></li><li><span>' + esc(t('toV')) + '</span><span>' + esc(sName(s2)) + ' · ' + esc(t('ayah')) + ' ' + esc(nf(end[1])) + '</span></li></ul></section>' +
+            '<a class="btn gold" href="#/quran/' + d.start[0] + '/' + d.start[1] + '">' + esc(t('startReading')) + '</a><button class="btn primary" data-act="k-done">' + esc(t('doneToday')) + '</button><button class="btn" data-act="k-reset">' + esc(t('khatmaReset')) + '</button>';
+        }).catch(function () { loadFail('#kbody'); });
       }
     };
   }
@@ -459,6 +699,7 @@
       Object.keys(METHODS).map(function (k) { return '<option value="' + k + '"' + (S.method === k ? ' selected' : '') + '>' + esc(METHODS[k][S.lang] || METHODS[k].ar) + '</option>'; }).join('') + '</select><p class="small muted">' + esc(t('methodNote')) + '</p></div>' +
       '<div class="field"><span class="lbl">' + esc(t('asrTime')) + '</span>' + seg('asr', S.asr, [['standard', t('asrStd')], ['hanafi', t('asrHan')]]) + '<p class="small muted">' + esc(t('asrNote')) + '</p></div>' +
       '<div class="field"><span class="lbl">' + esc(t('hijriAdj')) + ' — <span class="muted" style="font-weight:400">' + esc(hijri(new Date())) + '</span></span>' + seg('hijri', S.hijri, [[-1, nf(-1) + ' ' + t('day')], [0, nf(0)], [1, '+' + nf(1) + ' ' + t('day')]]) + '<p class="small muted">' + esc(t('hijriNote')) + '</p></div></section>' +
+      '<section class="card"><div class="field"><label for="rec">' + esc(t('reciter')) + '</label><select id="rec" data-act="reciter">' + RECITERS.map(function (r) { return '<option value="' + r[0] + '"' + (S.reciter === r[0] ? ' selected' : '') + '>' + esc(S.lang === 'ar' ? r[1] : r[2]) + '</option>'; }).join('') + '</select></div></section>' +
       '<a class="card rowcard" href="#/sources"><span class="round">' + icon('info') + '</span><span class="grow"><b style="font-size:17px">' + esc(t('sources')) + '</b><span class="muted small">' + esc(t('version')) + ' ' + esc(VERSION) + '</span></span></a>';
     return { html: h };
   }
@@ -469,12 +710,20 @@
     var h = '<header class="head"><a class="iconbtn" href="#/settings" aria-label="' + esc(t('back')) + '"><span class="flip" style="display:flex">' + icon('back') + '</span></a><div style="flex-grow:1"><h1>' + esc(t('sources')) + '</h1></div></header>';
     if (ar) {
       h += '<section class="card src"><h2>القرآن الكريم</h2><p>النص القرآني برواية حفص عن عاصم بالرسم العثماني، من الإصدار الرقمي الرسمي لمجمع الملك فهد لطباعة المصحف الشريف (الإصدار 18)، معروض بخط المجمع «حفص» دون أي تعديل على النص.</p><p>' + L('https://qurancomplex.gov.sa/techquran/dev/') + '</p></section>' +
+        '<section class="card src"><h2>البحث في القرآن</h2><p>يبحث في النص الإملائي من الإصدار نفسه لمجمع الملك فهد، ويعرض النتائج بالرسم العثماني.</p></section>' +
+        '<section class="card src"><h2>التفسير</h2><p>«التفسير الميسّر» الصادر عن مجمع الملك فهد لطباعة المصحف الشريف، بالنسخة الرقمية التي ينشرها مشروع تنزيل.</p><p>' + L('https://tanzil.net/trans/') + '</p></section>' +
+        '<section class="card src"><h2>التلاوات</h2><p>تُبثّ مباشرة من المكتبة الصوتية للقرآن الكريم mp3quran.net، برواية حفص عن عاصم.</p><p>' + L('https://mp3quran.net') + '</p></section>' +
+        '<section class="card src"><h2>الأربعون النووية</h2><p>للإمام يحيى بن شرف النووي رحمه الله، بالنص المنشور في موقع sunnah.com.</p><p>' + L('https://sunnah.com/nawawi40') + '</p></section>' +
         '<section class="card src"><h2>الأذكار</h2><p>من كتاب «حصن المسلم من أذكار الكتاب والسنة» للشيخ د. سعيد بن علي بن وهف القحطاني رحمه الله، مع تخريج الأحاديث كما ورد في الكتاب. عُرضت فقط الأذكار التي تطابق نصّها في نسختين رقميتين مستقلتين من الكتاب.</p></section>' +
         '<section class="card src"><h2>مواقيت الصلاة والقبلة</h2><p>تُحسب على جهازك بمكتبة Adhan مفتوحة المصدر، المبنية على المعادلات الفلكية في كتاب «Astronomical Algorithms» لجان ميوس. طرق الحساب المتاحة هي المعتمدة لدى الهيئات المذكورة في الإعدادات.</p><p>' + L('https://github.com/batoulapps/adhan-js') + '</p></section>' +
         '<section class="card src"><h2>التاريخ الهجري</h2><p>تقويم أم القرى كما توفّره أنظمة التشغيل والمتصفحات، وقد يختلف يومًا عن رؤية الهلال في بلدك. يمكن تعديله من الإعدادات.</p></section>' +
         '<section class="card src"><h2>تنبيه</h2><p>هذه نسخة أولى. المحتوى الديني منقول من مصادره دون تصرّف، ومع ذلك يُنصح بمراجعته من أهل العلم. إذا وجدت خطأ فأبلغنا لتصحيحه.</p><p class="muted small">الخصوصية: لا يجمع التطبيق أي بيانات. موقعك وإعداداتك تبقى على جهازك.</p></section>';
     } else {
       h += '<section class="card src"><h2>The Quran</h2><p>Hafs ‘an ‘Asim in Uthmani script, from the official digital release of the King Fahd Glorious Quran Printing Complex (version 18), shown in the Complex’s own Hafs font with no change to the text.</p><p>' + L('https://qurancomplex.gov.sa/en/techquran/dev/') + '</p></section>' +
+        '<section class="card src"><h2>Quran search</h2><p>Searches the plain-spelling text from the same King Fahd Complex release and shows results in Uthmani script.</p></section>' +
+        '<section class="card src"><h2>Tafsir and translation</h2><p>“Al-Tafsir al-Muyassar” by the King Fahd Glorious Quran Printing Complex, and the Saheeh International English translation, both in the digital editions published by the Tanzil project.</p><p>' + L('https://tanzil.net/trans/') + '</p></section>' +
+        '<section class="card src"><h2>Recitations</h2><p>Streamed from the mp3quran.net audio library, in the Hafs ‘an ‘Asim narration.</p><p>' + L('https://mp3quran.net') + '</p></section>' +
+        '<section class="card src"><h2>An-Nawawi’s Forty</h2><p>By Imam Yahya ibn Sharaf an-Nawawi, in the text published on sunnah.com.</p><p>' + L('https://sunnah.com/nawawi40') + '</p></section>' +
         '<section class="card src"><h2>Adhkar</h2><p>From “Hisn al-Muslim” (Fortress of the Muslim) by Shaykh Dr Sa‘id ibn ‘Ali ibn Wahf al-Qahtani, with the hadith references given in the book. Only adhkar whose text matched in two independent digital copies of the book are included.</p></section>' +
         '<section class="card src"><h2>Prayer times and Qibla</h2><p>Calculated on your device with the open-source Adhan library, based on Jean Meeus’s “Astronomical Algorithms”. The available methods are those of the authorities listed in Settings.</p><p>' + L('https://github.com/batoulapps/adhan-js') + '</p></section>' +
         '<section class="card src"><h2>Hijri date</h2><p>The Umm al-Qura calendar as provided by your device. It may differ by a day from the local moon sighting, and can be adjusted in Settings.</p></section>' +
@@ -493,12 +742,16 @@
   }
   function render(keepScroll) {
     if (cleanup) { cleanup(); cleanup = null; }
+    if (!keepScroll) { selVerse = null; closeSheet(); }
     var parts = location.hash.replace(/^#\/?/, '').split('/').filter(Boolean);
     var v, section = 'home';
     switch (parts[0]) {
       case 'prayer': v = viewPrayer(); section = 'prayer'; break;
       case 'qibla': v = viewQibla(); section = 'prayer'; break;
-      case 'quran': section = 'quran'; v = parts[1] ? viewSurah(parseInt(parts[1], 10) || 1, parseInt(parts[2], 10) || 0) : viewQuranIndex(); break;
+      case 'quran': section = 'quran'; v = parts[1] ? viewSurah(parseInt(parts[1], 10) || 1, parseInt(parts[2], 10) || 0, parts[3] === 't') : viewQuranIndex(); break;
+      case 'search': section = 'quran'; v = viewSearch(); break;
+      case 'hadith': v = parts[1] ? viewHadith(parseInt(parts[1], 10) || 1) : viewHadithIndex(); break;
+      case 'khatma': v = viewKhatma(); break;
       case 'adhkar': section = 'adhkar'; v = parts[1] ? viewAdhkarCat(parts[1]) : viewAdhkarIndex(); break;
       case 'tasbih': section = 'adhkar'; v = viewTasbih(); break;
       case 'settings': section = 'settings'; v = viewSettings(); break;
@@ -508,7 +761,7 @@
     applyLook();
     var y = window.scrollY;
     $('#app').innerHTML = v.html;
-    renderNav(section);
+    renderNav(section); renderDock();
     if (v.after) v.after();
     window.scrollTo(0, keepScroll ? y : 0);
   }
@@ -559,8 +812,18 @@
     else if (a === 'fs') { save('fs', parseFloat(v)); render(true); }
     else if (a === 'asr') { save('asr', v); render(true); }
     else if (a === 'hijri') { save('hijri', parseInt(v, 10)); render(true); }
+    else if (a === 'tafsir') { if (selVerse) openTafsir(selVerse.s, selVerse.v); }
+    else if (a === 'sheet-close') closeSheet();
+    else if (a === 'aud-play') playSurah(+el.getAttribute('data-s'), 0);
+    else if (a === 'aud-resume') { if (S.audio) playSurah(S.audio.s, S.audio.t || 0); }
+    else if (a === 'aud-toggle') { if (audio && playing) { if (audio.paused) { var pp = audio.play(); if (pp && pp.catch) pp.catch(function () {}); } else audio.pause(); } }
+    else if (a === 'aud-stop') stopAudio();
+    else if (a === 'k-start') { save('khatma', { days: parseInt(v, 10), done: 0 }); render(true); }
+    else if (a === 'k-done') { S.khatma.done += 1; save('khatma', S.khatma); render(false); }
+    else if (a === 'k-reset') { save('khatma', null); render(false); }
     else if (a === 'mark') {
-      save('mark', { s: +el.getAttribute('data-s'), v: +el.getAttribute('data-v') });
+      if (!selVerse) return;
+      save('mark', { s: selVerse.s, v: selVerse.v });
       var old = $('.ayat .mark'); if (old) old.classList.remove('mark');
       var cur = $('.ayat span[data-v="' + S.mark.v + '"]'); if (cur) cur.classList.add('mark');
       el.textContent = t('markSaved'); el.disabled = true;
@@ -584,6 +847,7 @@
     var el = e.target, a = el.getAttribute && el.getAttribute('data-act');
     if (a === 'city') { if (el.value === '') return; var c = CITIES[+el.value]; setLoc({ lat: c.lat, lng: c.lng, city: +el.value, tz: c.tz }); }
     else if (a === 'method') { save('method', el.value); render(true); }
+    else if (a === 'reciter') { save('reciter', el.value); if (playing) { var cur = playing, at = audio ? audio.currentTime : 0; playing = null; playSurah(cur, at); } }
   });
 
   /* ---------- clock ---------- */

@@ -1,6 +1,6 @@
 /* Offline support. Bump CACHE when files change. */
-var CACHE = 'nur-v1.0.0';
-var FILES = ['./', 'index.html', 'styles.css', 'app.js', 'adhan.min.js', 'quran.json', 'adhkar.json', 'hafs.woff2', 'amiri.woff2', 'manifest.webmanifest', 'icon.svg', 'icon-192.png', 'icon-512.png'];
+var CACHE = 'nur-v2.0.0';
+var FILES = ['./', 'index.html', 'styles.css', 'app.js', 'adhan.min.js', 'quran.json', 'adhkar.json', 'meta.json', 'hadith.json', 'hafs.woff2', 'amiri.woff2', 'manifest.webmanifest', 'icon.svg', 'icon-192.png', 'icon-512.png'];
 
 self.addEventListener('install', function (e) {
   e.waitUntil(caches.open(CACHE).then(function (c) { return c.addAll(FILES); }).then(function () { return self.skipWaiting(); }));
